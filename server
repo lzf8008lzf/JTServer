@@ -1,0 +1,138 @@
+#!/bin/bash
+# require jdk 1.8+
+#
+# by yinheli <me@yinheli.com>
+set -e
+
+###############################
+main="com.tuniondata.paycode.mobile.Application"
+appjar=paycode-mobile-open-api-1.0.0-SNAPSHOT.jar
+logfile=paycode-mobile-open-api.log
+heapsize=128M
+###############################
+
+app_dir=$(cd $(dirname $0); pwd)
+echo "application home: $app_dir"
+cd $app_dir
+
+[ -d "log" ] || mkdir log
+
+debug="$2"
+
+pidfile=$app_dir/.pid
+classpath=$app_dir/classes:lib/xman-boot-loader-1.0.0-SNAPSHOT.jar:"lib/${appjar}"
+
+JAVA_OPTS="-server -Xms${heapsize} -Xmx${heapsize} -Xss256k
+          -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError
+          -XX:+PrintGCApplicationStoppedTime -Xloggc:log/gc.log
+          -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=1024k
+          -Duser.timezone=Asia/Shanghai -Dfile.encoding=UTF-8 -Dapp=$main"
+
+pid=-1
+
+start() {
+    daemon=1
+    # parse start options
+    while [[ "$#" -gt 0 ]]; do
+        key="$1"
+        case $key in
+        --no-daemon)
+            daemon=0
+            ;;
+        esac
+        shift
+    done
+
+    pid=`ps -ef | grep java | grep $classpath | grep -v grep | awk '{print $2}'`
+    if [ -z "$pid" ]; then
+        consolelog="/dev/null"
+        if [[ "$debug" = "debug" ]]; then
+            consolelog="console.log"
+        fi
+
+        if [[ "${daemon}" = "0" ]]; then
+            java -cp $classpath $JAVA_OPTS xman.Boot
+        else
+            java -cp $classpath $JAVA_OPTS xman.Boot > /dev/null 2>&1 &
+            echo $!>$pidfile
+            echo "running pid: $!"
+        fi
+
+    else
+        echo "server is runing pid:$pid"
+    fi
+}
+
+stop() {
+    pid=`ps -ef | grep java | grep $classpath | grep -v grep | awk '{print $2}'`
+    if [ ! -z "$pid" ]; then
+        kill $pid
+        sleep 2s
+        pid=`ps -ef | grep java | grep $classpath | grep -v grep | awk '{print $2}'`
+        if [ ! -z "$pid" ]; then
+            echo "force kill $pid"
+            kill -9 $pid
+        fi
+    fi
+    dd=`date +%y%m%d%H%M%S`
+    [ ! -f "$app_dir/log/gc.log" ] || mv $app_dir/log/gc.log $app_dir/log/gc_${dd}.log
+    echo "server stoped!"
+    rm -f $pidfile
+}
+
+net() {
+    netstat -anp | grep `cat $pidfile`
+}
+
+log() {
+    tail -fn 300 $app_dir/log/$logfile
+}
+
+lsof() {
+    /usr/bin/lsof -p `cat $pidfile`
+}
+
+heap() {
+    dd=`date +%m%d-%H%M`
+    mkdir -p $app_dir/log/heap
+    jmap -histo `cat $pidfile` > $app_dir/log/heap/$dd.txt
+    jmap -dump:format=b,file=$app_dir/log/heap/$dd.bin `cat $pidfile`
+}
+
+gc() {
+    jstat -gc `cat $pidfile` 5000
+}
+
+version() {
+    if [[ -f "lib/$appjar" ]]; then
+        unzip -p "lib/$appjar" "META-INF/MANIFEST.MF" | sed -e '/Manifest-Version.*$/d'
+    else
+        echo "$appjar file not found"
+    fi
+}
+
+case "$1" in
+    version)
+        version;;
+    net)
+        net;;
+    log)
+        log;;
+    gc)
+        gc;;
+    lsof)
+        lsof;;
+    heap)
+        heap;;
+    start)
+        start $@;;
+    stop)
+        stop;;
+    restart)
+        stop
+        start;;
+    *)
+        echo "Usage: server {start [--no-daemon]|stop|restart|net|log|lsof|heap|gc|version}"
+        exit 0;
+esac
+exit 0;
