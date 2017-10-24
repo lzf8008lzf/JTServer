@@ -7,7 +7,6 @@ import com.tuniondata.jtserver.utils.Constants;
 import com.tuniondata.jtserver.utils.JT809Constants;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +40,7 @@ public class TcpClientBiz {
         boolean success = false;
         try {
             if (!Constants.LOGIN_SUCCESS.equals(LONGINSTATUS) && !LOGINING.equals(LONGINSTATUS)) {
+                System.err.println("login2Upsvr");
                 //开始登录 Message为数据对象，代码稍后给出
                 Message msg = new Message(JT809Constants.UP_CONNECT_REQ);
                 ChannelBuffer buffer = ChannelBuffers.buffer(46);
@@ -51,10 +51,36 @@ public class TcpClientBiz {
                 buffer.writeBytes(ip);//32
                 buffer.writeShort((short) Constants.TCP_RESULT_PORT);//2
                 msg.setMsgBody(buffer);
-                Channel channel = tcpClient.getChannel();
 
-                channel.write(MessagePack.buildMessage(msg));
+                tcpClient.sendMessage(MessagePack.buildMessage(msg));
+
                 LONGINSTATUS = LOGINING;
+            }
+        }catch (Exception ex)
+        {
+            LOG.error(ex.getMessage());
+        }
+        return success;
+    }
+
+    /** * 登录接入平台
+     * * boolean *
+     * @return */
+    public boolean loginOut(){
+        boolean success = false;
+        try {
+            if (!Constants.LOGIN_SUCCESS.equals(LONGINSTATUS) && !LOGINING.equals(LONGINSTATUS)) {
+                //开始登录 Message为数据对象，代码稍后给出
+                Message msg = new Message(JT809Constants.UP_DICONNECE_REQ);
+                ChannelBuffer buffer = ChannelBuffers.buffer(46);
+                buffer.writeInt(ZUCHE_ID);//4
+                byte[] pwd = ByteUtils.getBytesWithLengthAfter(8, ZUCHE_PWD.getBytes());
+                buffer.writeBytes(pwd);//8
+                msg.setMsgBody(buffer);
+
+                tcpClient.sendMessage(MessagePack.buildMessage(msg));
+
+                LONGINSTATUS = "";
             }
         }catch (Exception ex)
         {

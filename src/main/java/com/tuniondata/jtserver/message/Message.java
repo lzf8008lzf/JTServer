@@ -19,7 +19,7 @@ public class Message {
     private static int internalMsgNo = 0;
     private long msgLength; //unit32_t数据长度4个字节
     private long msgSn;//unit32_t
-    private byte encryptFlag=1; //BYTE
+    private byte encryptFlag=0; //BYTE
     private int msgGesscenterId=9999;
     private long encryptKey;
     private int crcCode;

@@ -26,7 +26,11 @@ public class RecevieHandler extends SimpleChannelHandler {
             if(result == JT809Constants.UP_CONNECT_RSP_SUCCESS){
                 TcpClientBiz.LONGINSTATUS = Constants.LOGIN_SUCCESS;
                 LOG.info("------------------登录成功");
-            }else{
+            }else if(result == JT809Constants.UP_DISCONNECT_RSP){
+                LOG.info("------------------注销成功");
+            }
+            else{
+                TcpClientBiz.LONGINSTATUS = "";
                 LOG.error("------------------登录异常，请检查" + "0x0" + Integer.toHexString(result));
             }
         }
@@ -37,6 +41,7 @@ public class RecevieHandler extends SimpleChannelHandler {
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
         throws Exception {
         LOG.error("exceptionCaught:"+e.getCause().getMessage());
+        e.getChannel().close();
         //super.exceptionCaught(ctx, e);
     }
 

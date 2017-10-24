@@ -34,12 +34,13 @@ public class ClientLogin implements IDataProcess {
             downLinkPort = channelBuffer.readUnsignedShort();
 
             //校验用户名及密码，通过后返回成功，否则失败
+            int loginResult = loginCheck();
 
             Message resMsg = new Message(JT809Constants.UP_CONNECT_RSP);
 
             resBuffer = ChannelBuffers.buffer(5);
-            resBuffer.writeByte(JT809Constants.UP_CONNECT_RSP_SUCCESS);
-            resBuffer.writeInt(JT809Constants.UP_CONNECT_RSP_SUCCESS);
+            resBuffer.writeByte(loginResult);
+            resBuffer.writeInt(msg.getCrcCode());//校验码，还不知道返回啥内容
             resMsg.setMsgBody(resBuffer);
 
             resBuffer = MessagePack.buildMessage(resMsg);
@@ -49,5 +50,22 @@ public class ClientLogin implements IDataProcess {
         }
 
         return resBuffer;
+    }
+
+    private int loginCheck()
+    {
+        int iRet = JT809Constants.UP_CONNECT_RSP_ERROR_06;
+
+        //用户名及密码校验
+
+        //根据用户名查询，如果用户不存在返回 UP_CONNECT_RSP_ERROR_03
+
+        //判断密码是否正确，如果错误返回 UP_CONNECT_RSP_ERROR_04
+
+        //判断接入码是否正，错误返回 UP_CONNECT_RSP_ERROR_02
+
+        //都通过验证 返回UP_CONNECT_RSP_SUCCESS
+
+        return  iRet;
     }
 }

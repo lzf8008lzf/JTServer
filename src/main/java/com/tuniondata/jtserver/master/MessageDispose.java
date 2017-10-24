@@ -4,6 +4,7 @@ package com.tuniondata.jtserver.master;
 import com.tuniondata.jtserver.bussiness.ClientHold;
 import com.tuniondata.jtserver.bussiness.ClientLogin;
 import com.tuniondata.jtserver.bussiness.ClientLogout;
+import com.tuniondata.jtserver.bussiness.ClientVehicleLocation;
 import com.tuniondata.jtserver.message.Message;
 import com.tuniondata.jtserver.utils.JT809Constants;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -29,6 +30,9 @@ public class MessageDispose {
     @Autowired
     private ClientHold clientHold;
 
+    @Autowired
+    private ClientVehicleLocation clientVehicleLocation;
+
     public ChannelBuffer msgDispose(Message msg)
     {
         ChannelBuffer resBuf = null;
@@ -49,6 +53,10 @@ public class MessageDispose {
             case JT809Constants.UP_LINKETEST_REQ:
                 LOG.info("连接保持请求消息");
                 resBuf = clientHold.process(msg);
+                break;
+            case JT809Constants.UP_EXG_MSG_REAL_LOCATION:
+                LOG.info("车辆定位信息");
+                resBuf = clientVehicleLocation.process(msg);
                 break;
             default:
                 LOG.error("没有找到相应的消息处理体！");

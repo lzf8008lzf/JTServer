@@ -16,7 +16,7 @@ public class MessagePack {
         if(null != msg.getMsgBody()){
             bodyLength = msg.getMsgBody().readableBytes();
         }
-//        msg.setMsgGesscenterId(PLANT_CODE);
+
         ChannelBuffer buffer = ChannelBuffers.dynamicBuffer(bodyLength + Message.MSG_FIX_LENGTH);
         ChannelBuffer headBuffer = ChannelBuffers.buffer(22);//---数据头
         headBuffer.writeInt(buffer.capacity());//4

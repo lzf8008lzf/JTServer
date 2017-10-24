@@ -15,8 +15,7 @@ public class TcpClientTest extends BaseTest {
     @Test
     public void StartSlaverClient()
     {
-        tcpClient.init();
-        tcpClient.getChannel();
+        tcpClient.connect();
         while (true)
         {
 

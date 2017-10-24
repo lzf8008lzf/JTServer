@@ -23,21 +23,22 @@ public class HeartBeatHandler extends IdleStateAwareChannelHandler {
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception{
 
-        if(tcpClientBiz == null)
-        {
-            tcpClientBiz =  (TcpClientBiz) SpringContextHolder.getBean("tcpClientBiz");
-            if(tcpClientBiz == null)
-            {
+        if(tcpClientBiz == null) {
+            tcpClientBiz = (TcpClientBiz) SpringContextHolder.getBean("tcpClientBiz");
+            if (tcpClientBiz == null) {
                 LOG.error("tcpClientBiz is null!");
                 return;
             }
-
-            if(StringUtils.isBlank(tcpClientBiz.LONGINSTATUS) || tcpClientBiz.LOGINING.equals(tcpClientBiz.LONGINSTATUS)){
-
-                tcpClientBiz.login2Upsvr();
-                LOG.info("利用空闲心跳去登录------ 开始登录");
-            }
         }
+
+        if(StringUtils.isBlank(tcpClientBiz.LONGINSTATUS) || tcpClientBiz.LOGINING.equals(tcpClientBiz.LONGINSTATUS)){
+
+            tcpClientBiz.login2Upsvr();
+            LOG.info("利用空闲心跳去登录------ 开始登录");
+        }else{
+            tcpClientBiz.loginOut();
+        }
+
 
         if(e.getState() == IdleState.WRITER_IDLE){
             LOG.info("链路空闲，发送心跳!");

@@ -1,18 +1,25 @@
 package com.tuniondata.jtserver.utils;
 
+import com.tuniondata.jtserver.JTServerManage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
 /**
  * Created by Think on 2017/10/23.
  */
+@Component
 public class GlobalManager  implements ApplicationListener<ContextRefreshedEvent> {
 
     private static Logger logger = LoggerFactory.getLogger(GlobalManager.class);
 
-    private boolean initFlag=false;								//是否已经初始化
+    private static boolean initFlag=false;								//是否已经初始化
+
+    @Autowired
+    private JTServerManage serverManage;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -31,7 +38,7 @@ public class GlobalManager  implements ApplicationListener<ContextRefreshedEvent
      */
     public void initGlobalCache()
     {
-
+        serverManage.startServer();
     }
 }
 

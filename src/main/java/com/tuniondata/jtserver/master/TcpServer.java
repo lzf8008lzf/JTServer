@@ -8,6 +8,8 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.logging.LoggingHandler;
+import org.jboss.netty.logging.InternalLogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +20,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by Think on 2017/10/19.
  */
-public class TcpServer extends Thread{
+public class TcpServer {
     private static final Logger LOG = LoggerFactory.getLogger(TcpServer.class);
 
     private int port = Constants.DEFAULT_PORT;
@@ -34,7 +36,7 @@ public class TcpServer extends Thread{
         init();
     }
 
-    public void init() {
+    private void init() {
 
         bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(
             bossExecutor, workerExecutor, Constants.workerCount));
@@ -48,7 +50,7 @@ public class TcpServer extends Thread{
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
-//                  pipeline.addLast("loging", new LoggingHandler(InternalLogLevel.ERROR)); 打印日志信息，上线稳定后可去掉
+                  pipeline.addLast("loging", new LoggingHandler(InternalLogLevel.DEBUG)); //打印日志信息，上线稳定后可去掉
 //                pipeline.addLast("timeout", new IdleStateHandler(new HashedWheelTimer(), 10, 60, 0));//设置空闲心跳机制
 //                pipeline.addLast("heartbeat", new MasterHeartBeatHandler());//心跳发送包处理handler
                 pipeline.addLast("decode", new Decoder());//解码

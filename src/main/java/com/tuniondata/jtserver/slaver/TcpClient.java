@@ -3,6 +3,7 @@ package com.tuniondata.jtserver.slaver;
 import com.tuniondata.jtserver.Decoder;
 import com.tuniondata.jtserver.utils.Constants;
 import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.timeout.IdleStateHandler;
@@ -32,7 +33,12 @@ public class TcpClient {
     private int port = Constants.DEFAULT_PORT;
     private Channel channel;
 
-    public void init() {
+    public TcpClient()
+    {
+        init();
+    }
+
+    private void init() {
 
         bootstrap = new ClientBootstrap(new NioClientSocketChannelFactory(
             bossExecutor, workerExecutor, Constants.workerCount));
@@ -44,8 +50,9 @@ public class TcpClient {
 
     }
 
-    public Channel getChannel() {
+    public void connect() {
         if (null == channel || !channel.isOpen()) {
+
             bootstrap.setOption("writeBufferHighWaterMark", 64 * 1024);
             bootstrap.setOption("writeBufferLowWaterMark", 32 * 1024);
             bootstrap.setPipelineFactory(new ChannelPipelineFactory(){
@@ -56,7 +63,7 @@ public class TcpClient {
                     pipeline.addLast("timeout", new IdleStateHandler(new HashedWheelTimer(), 10, 60, 0));//设置空闲心跳机制
                     pipeline.addLast("heartbeat", new HeartBeatHandler());//心跳发送包处理handler
                     pipeline.addLast("decode", new Decoder());//解码
-                    pipeline.addLast("loginHandler", new RecevieHandler());//反馈数据处理
+                    pipeline.addLast("msgHandler", new RecevieHandler());//反馈数据处理
                     return pipeline;
                 }
             });
@@ -64,15 +71,24 @@ public class TcpClient {
             ChannelFuture future = bootstrap.connect(new InetSocketAddress(
                 address, port));
 
-            future.awaitUninterruptibly();
-
-            if (future.isSuccess()) {
-                channel = future.getChannel();
-            } else {
-                throw new RuntimeException(future.getCause());
-            }
+            channel = future.getChannel();
+//            future.awaitUninterruptibly();
+//            if (future.isSuccess()) {
+//                channel = future.getChannel();
+//            } else {
+//                throw new RuntimeException(future.getCause());
+//            }
         }
-        return channel;
+    }
+
+    public void sendMessage(ChannelBuffer channelBuffer)
+    {
+        if (channel != null && channel.isOpen() && channel.isConnected()
+            && channel.isWritable()) {
+            channel.write(channelBuffer);
+        }else{
+            LOG.error("发送消息错误！");
+        }
     }
 
 }
