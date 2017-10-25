@@ -2,7 +2,11 @@ package com.tuniondata.jtserver.bussiness;
 
 import com.tuniondata.jtserver.master.IDataProcess;
 import com.tuniondata.jtserver.message.Message;
+import com.tuniondata.jtserver.utils.CRC16CCITT;
+import com.tuniondata.jtserver.utils.JT809Constants;
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,11 +15,18 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ClientVehicleLocation implements IDataProcess {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ClientVehicleLocation.class);
+
+    private String vehichleNo;       //21车牌号
+    private int vehicleColor;      //车牌颜色
+    private int dataType;            //子业务类型
+    private long dataLength;          //后续数据长度
     private byte encrypt=0; //1BYTE 加密标识
     private String date;    //4    dmyy
     private String time;    //3    时分秒
-    private long lon;       //4   经度1*10^-6
-    private long lat;       //4   纬度
+    private double lon;       //4   经度1*10^-6
+    private double lat;       //4   纬度
     private int vec1;       //2   速度㎞/h
     private int vec2;       //2   行驶记录速度
     private long vec3;       //4   车辆当前总里程数
@@ -26,28 +37,48 @@ public class ClientVehicleLocation implements IDataProcess {
 
     @Override
     public ChannelBuffer process(Message msg) {
+
+        double unit=1000000.00; //经纬度除数
         ChannelBuffer resBuffer = null;
 
         ChannelBuffer channelBuffer = msg.getMsgBody();
 
         try {
-            encrypt =  channelBuffer.readByte();
-            date = new String(channelBuffer.readBytes(4).array());
-            time = new String(channelBuffer.readBytes(3).array());
-            lon = channelBuffer.readUnsignedInt();
-            lat = channelBuffer.readUnsignedInt();
-            vec1 = channelBuffer.readUnsignedShort();
-            vec2 = channelBuffer.readUnsignedShort();
-            vec3 = channelBuffer.readUnsignedInt();
-            direction =  channelBuffer.readUnsignedShort();
-            altitude =  channelBuffer.readUnsignedShort();
-            state = channelBuffer.readUnsignedInt();
-            alarm = channelBuffer.readUnsignedInt();
+            vehicleColor = CRC16CCITT.andOperation(channelBuffer.readByte());
+            vehichleNo = new String(channelBuffer.readBytes(21).array(), "GBK");
+            vehicleColor = CRC16CCITT.andOperation(channelBuffer.readByte());
+            dataType = channelBuffer.readUnsignedShort();
+            dataLength = channelBuffer.readUnsignedInt();
+
+            if(dataType== JT809Constants.UP_EXG_MSG_REAL_LOCATION) {
+                encrypt = channelBuffer.readByte();
+                date = String.format("%02d-%02d-%04d",channelBuffer.readByte(),channelBuffer.readByte(),channelBuffer.readUnsignedShort());
+                time = String.format("%02d:%02d:%02d",channelBuffer.readByte(),channelBuffer.readByte(),channelBuffer.readByte());
+                lon = channelBuffer.readUnsignedInt()/unit;
+                lat = channelBuffer.readUnsignedInt()/unit;
+                vec1 = channelBuffer.readUnsignedShort();
+                vec2 = channelBuffer.readUnsignedShort();
+                vec3 = channelBuffer.readUnsignedInt();
+                direction = channelBuffer.readUnsignedShort();
+                altitude = channelBuffer.readUnsignedShort();
+                state = channelBuffer.readUnsignedInt();
+                alarm = channelBuffer.readUnsignedInt();
+            }
+
+            LOG.info(this.toString());
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return resBuffer;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName()+" [vehichleNo=" + vehichleNo + ", vehicleColor=" + vehicleColor + ", dataType="+ dataType
+            + ", dataLength=" + dataLength + ", encrypt=" + encrypt+ ", date=" + date+ ", time=" + time+ ", lon=" + lon
+            + ", lat=" + lat+ ", vec1=" + vec1+ ", vec2=" + vec2+ ", vec3=" + vec3+ ", direction=" + direction+ ", altitude=" + altitude
+            + ", state=" + state+ ", alarm=" + alarm+ "]";
     }
 }

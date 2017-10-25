@@ -54,7 +54,7 @@ public class MessageDispose {
                 LOG.info("连接保持请求消息");
                 resBuf = clientHold.process(msg);
                 break;
-            case JT809Constants.UP_EXG_MSG_REAL_LOCATION:
+            case JT809Constants.UP_VEHICLE_GPS_MSG:
                 LOG.info("车辆定位信息");
                 resBuf = clientVehicleLocation.process(msg);
                 break;

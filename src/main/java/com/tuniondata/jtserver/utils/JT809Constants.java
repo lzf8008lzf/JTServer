@@ -63,6 +63,8 @@ public class JT809Constants {
 
     public final static int DOWN_BASE_MSG = 0x9600;//从链路静态信息交换信息
 
+    public final static int UP_VEHICLE_GPS_MSG = 0x912;     //车辆定位信息
+
     public final static int UP_EXG_MSG_REAL_LOCATION = 0x1202;//实时上传车辆定位信息
     public final static int UP_EXG_MSG_HISTORY_LOCATION = 0x1203;//车辆定位信息自动补报
 

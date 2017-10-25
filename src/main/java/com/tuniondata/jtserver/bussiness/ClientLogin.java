@@ -7,6 +7,8 @@ import com.tuniondata.jtserver.message.MessagePack;
 import com.tuniondata.jtserver.utils.JT809Constants;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,10 +18,13 @@ import org.springframework.stereotype.Component;
 @Component("clientLogin")
 public class ClientLogin implements IDataProcess {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ClientLogin.class);
+
     private int userID;         //用户ID
     private String password;    //用户密码
     private String downLinkIp;  //下级平台提供的从链路服务端IP地址
     private int downLinkPort;   //下级平台提供的从链路服务端口号
+    private int msgGesscenterId;     //下级平台接入码
 
     @Override
     public ChannelBuffer process(Message msg) {
@@ -32,6 +37,7 @@ public class ClientLogin implements IDataProcess {
             password = new String(channelBuffer.readBytes(8).array());
             downLinkIp = new String(channelBuffer.readBytes(32).array());
             downLinkPort = channelBuffer.readUnsignedShort();
+            msgGesscenterId = msg.getMsgGesscenterId();
 
             //校验用户名及密码，通过后返回成功，否则失败
             int loginResult = loginCheck();
@@ -54,6 +60,8 @@ public class ClientLogin implements IDataProcess {
 
     private int loginCheck()
     {
+        LOG.info(this.toString());
+
         int iRet = JT809Constants.UP_CONNECT_RSP_ERROR_06;
 
         //用户名及密码校验
@@ -66,6 +74,14 @@ public class ClientLogin implements IDataProcess {
 
         //都通过验证 返回UP_CONNECT_RSP_SUCCESS
 
+        iRet = JT809Constants.UP_CONNECT_RSP_SUCCESS;
+
         return  iRet;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName()+" [userID=" + userID + ", password=" + password + ", downLinkIp="
+            + downLinkIp + ", downLinkPort=" + downLinkPort + ", msgGesscenterId=" + msgGesscenterId + "]";
     }
 }

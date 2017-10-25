@@ -1,6 +1,7 @@
 package com.tuniondata.jtserver.utils;
 
 import com.tuniondata.jtserver.JTServerManage;
+import com.tuniondata.jtserver.slaver.TcpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class GlobalManager  implements ApplicationListener<ContextRefreshedEvent
     @Autowired
     private JTServerManage serverManage;
 
+    @Autowired
+    private TcpClient tcpClient;
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         logger.info("onApplicationEvent");
@@ -39,6 +43,7 @@ public class GlobalManager  implements ApplicationListener<ContextRefreshedEvent
     public void initGlobalCache()
     {
         serverManage.startServer();
+        //tcpClient.connect();
     }
 }
 

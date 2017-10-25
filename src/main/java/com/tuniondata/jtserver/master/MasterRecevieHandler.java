@@ -23,7 +23,7 @@ public class MasterRecevieHandler extends SimpleChannelHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e){
         try {
             Message msg = (Message) e.getMessage();
-            LOG.info("收到客户端消息ID：" + "0x" + Integer.toHexString(msg.getMsgId()));
+            LOG.info("收到来自"+getIpAndPort(ctx,e.getChannel())+"客户端消息：" + "0x" + Integer.toHexString(msg.getMsgId()));
 
             messageDispose = (MessageDispose) SpringContextHolder.getBean("messageDispose");
             if(messageDispose == null)
@@ -49,10 +49,9 @@ public class MasterRecevieHandler extends SimpleChannelHandler {
     /*
     获取IP地址及端口号
      */
-    private String getIpAndPort(ChannelHandlerContext ctx, ChannelStateEvent e)
+    private String getIpAndPort(ChannelHandlerContext ctx, Channel channel)
     {
         String retStr = "";
-        Channel channel = e.getChannel();
         if (channel != null) {
             String host = ((InetSocketAddress) ctx.getChannel()
                 .getRemoteAddress()).getAddress().getHostAddress();
@@ -71,7 +70,7 @@ public class MasterRecevieHandler extends SimpleChannelHandler {
      */
     public void addChannel(ChannelHandlerContext ctx, ChannelStateEvent e)
     {
-        JTServerManage.channelMap.put(getIpAndPort(ctx,e),e.getChannel());
+        JTServerManage.channelMap.put(getIpAndPort(ctx,e.getChannel()),e.getChannel());
     }
 
     /*
@@ -79,7 +78,7 @@ public class MasterRecevieHandler extends SimpleChannelHandler {
      */
     public void delChannel(ChannelHandlerContext ctx, ChannelStateEvent e)
     {
-        JTServerManage.channelMap.remove(getIpAndPort(ctx,e));
+        JTServerManage.channelMap.remove(getIpAndPort(ctx,e.getChannel()));
     }
 
     // 捕获异常
