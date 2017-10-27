@@ -37,7 +37,7 @@ public class Decoder extends FrameDecoder {
             msg.setEncryptFlag(buffer.readByte());//1byte报文加密标识
             msg.setEncryptKey(buffer.readUnsignedInt());//4byte数据加密密钥
 
-            LOG.debug("消息长度："+msg.getMsgLength()+";read"+buffer.readableBytes());
+//            LOG.debug("消息长度："+msg.getMsgLength()+";read"+buffer.readableBytes());
             int tailLen = 2+1; //两位校验码+一位尾标识
             if(buffer.readableBytes() >tailLen)
             {

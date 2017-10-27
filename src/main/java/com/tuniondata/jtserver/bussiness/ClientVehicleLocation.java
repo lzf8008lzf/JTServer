@@ -2,7 +2,6 @@ package com.tuniondata.jtserver.bussiness;
 
 import com.tuniondata.jtserver.master.IDataProcess;
 import com.tuniondata.jtserver.message.Message;
-import com.tuniondata.jtserver.utils.CRC16CCITT;
 import com.tuniondata.jtserver.utils.JT809Constants;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
@@ -44,12 +43,13 @@ public class ClientVehicleLocation implements IDataProcess {
         ChannelBuffer channelBuffer = msg.getMsgBody();
 
         try {
-            vehicleColor = CRC16CCITT.andOperation(channelBuffer.readByte());
+            vehicleColor = channelBuffer.readByte();
             vehichleNo = new String(channelBuffer.readBytes(21).array(), "GBK");
-            vehicleColor = CRC16CCITT.andOperation(channelBuffer.readByte());
+            vehicleColor = channelBuffer.readByte();
             dataType = channelBuffer.readUnsignedShort();
             dataLength = channelBuffer.readUnsignedInt();
 
+            //子业务类型
             if(dataType== JT809Constants.UP_EXG_MSG_REAL_LOCATION) {
                 encrypt = channelBuffer.readByte();
                 date = String.format("%02d-%02d-%04d",channelBuffer.readByte(),channelBuffer.readByte(),channelBuffer.readUnsignedShort());
@@ -63,6 +63,8 @@ public class ClientVehicleLocation implements IDataProcess {
                 altitude = channelBuffer.readUnsignedShort();
                 state = channelBuffer.readUnsignedInt();
                 alarm = channelBuffer.readUnsignedInt();
+
+                //解析完成，将数据保存至数据库。
             }
 
             LOG.info(this.toString());
