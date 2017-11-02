@@ -2,6 +2,9 @@ package com.tuniondata.jtserver.utils;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+
 import java.text.NumberFormat;
 
 /**
@@ -38,9 +41,10 @@ public class ByteUtils {
         }return lengthByte;
     }
 
-    /** * 报文转义 * void *
+    /** * 发送报文转义 * void *
      * @param bytes *
-     * @param formatBuffer */
+     * @param formatBuffer
+     * */
     public static void formatBuffer(
         byte[] bytes, ChannelBuffer formatBuffer){
         for (byte b : bytes) {
@@ -74,6 +78,68 @@ public class ByteUtils {
                     break;
             }
         }
+    }
+
+    /** * 接收报文转义
+     * @param ChannelBuffer
+     * @return ChannelBuffer
+     * */
+    public static ChannelBuffer reformatBuffer(ChannelBuffer buffer){
+        ChannelBuffer formatBuffer = ChannelBuffers.dynamicBuffer(buffer.capacity());
+        try {
+
+            byte[] bytes = buffer.readBytes(buffer.capacity()).array();
+            for (int i = 0; i < bytes.length; i++) {
+                byte inByte = bytes[i];
+                if (0x5A == inByte) {
+                    byte inByte2 = bytes[i + 1];
+                    if (0x01 == inByte2) {
+                        inByte = 0x5B;
+                        i++;
+                    } else if (0x02 == inByte2) {
+                        inByte = 0x5A;
+                        i++;
+                    }
+                } else if (0x5E == inByte) {
+                    byte inByte2 = bytes[i + 1];
+                    if (0x01 == inByte2) {
+                        inByte = 0x5D;
+                        i++;
+                    } else if (0x02 == inByte2) {
+                        inByte = 0x5E;
+                        i++;
+                    }
+                }
+
+                formatBuffer.writeByte(inByte);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //必须处理，否则后续会出现解析异常
+        ChannelBuffer retBuffer = formatBuffer.readBytes(formatBuffer.readableBytes());
+
+        return retBuffer;
+    }
+
+    /*
+    ChannelBuffer转换位16进制字符串返回
+     */
+    public static String convertChannelBuffer(ChannelBuffer cb)
+    {
+        String retStr = "";
+        try {
+            ChannelBuffer temp = cb.duplicate();
+            for(int i=0;i<temp.capacity();i++)
+            {
+                retStr = retStr+String.format("%02X", temp.readByte());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return retStr;
     }
 
     /** * 格式化经纬度,保留六位小数 * int *

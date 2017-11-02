@@ -43,7 +43,6 @@ public class ClientVehicleLocation implements IDataProcess {
         ChannelBuffer channelBuffer = msg.getMsgBody();
 
         try {
-            vehicleColor = channelBuffer.readByte();
             vehichleNo = new String(channelBuffer.readBytes(21).array(), "GBK");
             vehicleColor = channelBuffer.readByte();
             dataType = channelBuffer.readUnsignedShort();

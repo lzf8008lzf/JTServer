@@ -17,16 +17,16 @@ public class Message {
     public static final int MSG_FIX_LENGTH = 26;
 
     private static int internalMsgNo = 0;
-    private long msgLength; //unit32_t数据长度4个字节
-    private long msgSn;//unit32_t
-    private byte encryptFlag=0; //BYTE
-    private int msgGesscenterId=9999;
-    private long encryptKey;
-    private int crcCode;
-    private int msgId;
+    private long msgLength;                      //unit32_t数据长度4个字节
+    private long msgSn;                          //unit32_t  报文序列号
+    private int msgId;                           //业务数据类型
+    private int msgGesscenterId=9999;           //下级平台接入码，上级平台给下级平台分配的唯一标识码
+    private byte[] versionFlag = {0,0,1};       //协议版本号标识
+    private byte encryptFlag=0; //BYTE          //报文加密标识位
+    private long encryptKey;                    //数据加密秘钥
+    private int crcCode;                         //数据CRC校验码
 
-    private ChannelBuffer msgBody;
-    private byte[] versionFlag = {0,0,1};
+    private ChannelBuffer msgBody;               //业务数据包体
 
     //下行报文标识，值为1时，代表发送的数据；默认为0，代表接收的报文
 //  private int downFlag = 0;

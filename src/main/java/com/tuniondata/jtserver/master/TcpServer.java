@@ -1,13 +1,17 @@
 package com.tuniondata.jtserver.master;
 
 import com.tuniondata.jtserver.Decoder;
+import com.tuniondata.jtserver.message.Message;
 import com.tuniondata.jtserver.utils.Constants;
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.codec.frame.DelimiterBasedFrameDecoder;
 import org.jboss.netty.handler.logging.LoggingHandler;
 import org.jboss.netty.logging.InternalLogLevel;
 import org.slf4j.Logger;
@@ -53,6 +57,9 @@ public class TcpServer {
                   pipeline.addLast("loging", new LoggingHandler(InternalLogLevel.DEBUG)); //打印日志信息，上线稳定后可去掉
 //                pipeline.addLast("timeout", new IdleStateHandler(new HashedWheelTimer(), 10, 60, 0));//设置空闲心跳机制
 //                pipeline.addLast("heartbeat", new MasterHeartBeatHandler());//心跳发送包处理handler
+                ChannelBuffer buffer = ChannelBuffers.buffer(1);
+                buffer.writeByte(Message.MSG_TALL);//分包处理
+                pipeline.addLast("framer", new DelimiterBasedFrameDecoder(2048,buffer));
                 pipeline.addLast("decode", new Decoder());//解码
                 pipeline.addLast("masterRecevie", new MasterRecevieHandler());//反馈数据处理
                 return pipeline;

@@ -1,6 +1,7 @@
 package com.tuniondata.jtserver;
 
 import com.tuniondata.jtserver.message.Message;
+import com.tuniondata.jtserver.utils.ByteUtils;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -16,13 +17,23 @@ public class Decoder extends FrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-        int head = buffer.getByte(0);
-        int tail = buffer.getByte(buffer.capacity() - 1);
-        if( !(head == Message.MSG_HEAD && tail == Message.MSG_TALL)){
+        String logStr = ByteUtils.convertChannelBuffer(buffer);
+        LOG.debug("receive data:"+logStr);
+
+        //对接收的报文先进行转义，然后再解析
+        ChannelBuffer msgBuf = ByteUtils.reformatBuffer(buffer);
+
+//        logStr = ByteUtils.convertChannelBuffer(msgBuf);
+//        LOG.debug("format data:"+logStr);
+
+        int head = msgBuf.getByte(0);
+        int tail = msgBuf.getByte(msgBuf.capacity() - 1);
+        if( !(head == Message.MSG_HEAD )){
             return null;
         }
-        buffer.skipBytes(1);//头标识MSG_HEAD
-        Message msg = this.buildMessage(buffer);
+        msgBuf.skipBytes(1);//头标识MSG_HEAD
+        Message msg = this.buildMessage(msgBuf);
+
         return msg;
     }
 
@@ -38,14 +49,14 @@ public class Decoder extends FrameDecoder {
             msg.setEncryptKey(buffer.readUnsignedInt());//4byte数据加密密钥
 
 //            LOG.debug("消息长度："+msg.getMsgLength()+";read"+buffer.readableBytes());
-            int tailLen = 2+1; //两位校验码+一位尾标识
+            int tailLen = 2; //两位校验码+一位尾标识
             if(buffer.readableBytes() >tailLen)
             {
                 ChannelBuffer bodyBytes = buffer.readBytes(buffer.readableBytes() - tailLen);
                 msg.setMsgBody(bodyBytes);
             }
             msg.setCrcCode(buffer.readUnsignedShort());//2byte 校验码
-            buffer.skipBytes(1);//尾标识MSG_TALL
+            //buffer.skipBytes(1);//尾标识MSG_TALL
 
         }catch (Exception e)
         {
